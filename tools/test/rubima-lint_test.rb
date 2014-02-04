@@ -82,7 +82,7 @@ describe "Rubima-Lint" do
    end
 
    describe "TODO" do
-      it do
+      it "文中にあれば警告が出ること" do
          Open3.popen3("ruby rubima-lint.rb") { |stdin, stdout, stderr|
             stdin.puts "備忘録を表す TODO がある場合は警告を出す。"
             stdin.close
