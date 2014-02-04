@@ -4,9 +4,9 @@ require 'open3'
 
 describe "Rubima-Lint" do
 
-   describe "space of ascii characters before and after" do
-      describe "space of ascii characters before" do
-         it do
+   describe "アスキー文字の前後にスペース" do
+      describe "アスキー文字の前にスペースがないとき" do
+         it "警告が出ること" do
             Open3.popen3("ruby rubima-lint.rb") { |stdin, stdout, stderr|
                stdin.puts "アスキー文字の前にスペースabc が必要です"
                stdin.close
@@ -15,8 +15,8 @@ describe "Rubima-Lint" do
          end
       end
 
-      describe "space of ascii characters after" do
-         it do
+      describe "アスキー文字の後にスペースがないとき" do
+         it "警告が出ること" do
             Open3.popen3("ruby rubima-lint.rb") { |stdin, stdout, stderr|
                stdin.puts "アスキー文字の前にスペース abcが必要です"
                stdin.close
@@ -25,10 +25,10 @@ describe "Rubima-Lint" do
          end
       end
 
-      describe "space of ascii characters before and after" do
-         it do
+      describe "アスキー文字の前後にスペースがないとき" do
+         it "2つ警告が出ること" do
             Open3.popen3("ruby rubima-lint.rb") { |stdin, stdout, stderr|
-               stdin.puts "アスキー文字の前にスペースabcが必要です"
+               stdin.puts "アスキー文字の前後にスペースabcが必要です"
                stdin.close
                stdout.read.must_match /2 warning/m
             }
