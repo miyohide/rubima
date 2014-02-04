@@ -36,6 +36,51 @@ describe "Rubima-Lint" do
       end
    end
 
+   describe "invalid pattern" do
+      describe "三点リーダ" do
+         describe "単独で使っている時" do
+            it "警告が出ること" do
+               Open3.popen3("ruby rubima-lint.rb") { |stdin, stdout, stderr|
+                  stdin.puts "単独の三点リーダ…です。"
+                  stdin.close
+                  stdout.read.must_match /1 warning/m
+               }
+            end
+         end
+
+         describe "2文字で使っている時" do
+            it "警告が出ないこと" do
+               Open3.popen3("ruby rubima-lint.rb") { |stdin, stdout, stderr|
+                  stdin.puts "二文字の三点リーダ……です。"
+                  stdin.close
+                  stdout.read.must_equal ""
+               }
+            end
+         end
+
+         describe "文末で使い句点がない時" do
+            it "警告が出ること" do
+               Open3.popen3("ruby rubima-lint.rb") { |stdin, stdout, stderr|
+                  stdin.puts "二文字の三点リーダ……"
+                  stdin.close
+                  stdout.read.must_match /1 warning/m
+               }
+            end
+         end
+
+         describe "文末で使い句点がある時" do
+            it "警告が出ないこと" do
+               Open3.popen3("ruby rubima-lint.rb") { |stdin, stdout, stderr|
+                  stdin.puts "二文字の三点リーダ……。"
+                  stdin.close
+                  stdout.read.must_equal ""
+               }
+            end
+         end
+      end
+
+   end
+
    describe "TODO" do
       it do
          Open3.popen3("ruby rubima-lint.rb") { |stdin, stdout, stderr|
