@@ -134,6 +134,29 @@ describe "Rubima-Lint" do
          end
       end
 
+      describe "段落中の疑問符・感嘆符" do
+         describe "疑問符・感嘆符の次に全角スペースがないとき" do
+            it "警告が出ること" do
+               Open3.popen3("ruby rubima-lint.rb") { |stdin, stdout, stderr|
+                  # 半角スペースを含めている
+                  stdin.puts "疑問符？ 感嘆符"
+                  stdin.close
+                  stdout.read.must_match /1 warning/m
+               }
+            end
+         end
+
+         describe "疑問符・感嘆符の次に全角スペースがあるとき" do
+            it "警告が出ないこと" do
+               Open3.popen3("ruby rubima-lint.rb") { |stdin, stdout, stderr|
+                  stdin.puts "感嘆符！　疑問符"
+                  stdin.close
+                  stdout.read.must_equal ""
+               }
+            end
+         end
+      end
+
       describe "全角括弧" do
          it "開き全角括弧が使われているときは警告が出ること" do
                Open3.popen3("ruby rubima-lint.rb") { |stdin, stdout, stderr|
