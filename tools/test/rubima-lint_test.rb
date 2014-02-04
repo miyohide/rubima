@@ -37,6 +37,40 @@ describe "Rubima-Lint" do
    end
 
    describe "invalid pattern" do
+
+      describe "文末で括弧を閉じる" do
+         describe "句点 + 閉じ括弧 + 句点となっている場合" do
+            it "警告が出ること" do
+               Open3.popen3("ruby rubima-lint.rb") { |stdin, stdout, stderr|
+                  stdin.puts "本文 (追加の文。)。"
+                  stdin.close
+                  stdout.read.must_match /1 warning/m
+               }
+            end
+         end
+
+         describe "句点以外 + 閉じ括弧 + 句点となっている場合" do
+            it "警告が出ないこと" do
+               Open3.popen3("ruby rubima-lint.rb") { |stdin, stdout, stderr|
+                  stdin.puts "本文 (追加の文)。"
+                  stdin.close
+                  stdout.read.must_equal ""
+               }
+            end
+         end
+
+         describe "句点 + 閉じ括弧となっている場合" do
+            it "警告が出ないこと" do
+               Open3.popen3("ruby rubima-lint.rb") { |stdin, stdout, stderr|
+                  stdin.puts "本文。(追加の文。) です。"
+                  stdin.close
+                  stdout.read.must_equal ""
+               }
+            end
+         end
+      end
+
+
       describe "三点リーダ" do
          describe "単独で使っている時" do
             it "警告が出ること" do
