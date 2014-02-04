@@ -79,6 +79,24 @@ describe "Rubima-Lint" do
          end
       end
 
+      describe "全角括弧" do
+         it "開き全角括弧が使われているときは警告が出ること" do
+               Open3.popen3("ruby rubima-lint.rb") { |stdin, stdout, stderr|
+                  stdin.puts "全角（括弧テスト。"
+                  stdin.close
+                  stdout.read.must_match /1 warning/m
+               }
+         end
+
+         it "閉じ全角括弧が使われているときは警告が出ること" do
+               Open3.popen3("ruby rubima-lint.rb") { |stdin, stdout, stderr|
+                  stdin.puts "全角括弧）テスト。"
+                  stdin.close
+                  stdout.read.must_match /1 warning/m
+               }
+
+         end
+      end
    end
 
    describe "TODO" do
