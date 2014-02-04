@@ -70,6 +70,27 @@ describe "Rubima-Lint" do
          end
       end
 
+      describe "括弧笑の後の句点" do
+         describe "顔文字やそれに準じるものの後に句点があるとき" do
+            it "警告が出ること" do
+               Open3.popen3("ruby rubima-lint.rb") { |stdin, stdout, stderr|
+                  stdin.puts "笑)。"
+                  stdin.close
+                  stdout.read.must_match /1 warning/m
+               }
+            end
+         end
+
+         describe "顔文字やそれに準じるものの後に句点がないとき" do
+            it "警告が出ないこと" do
+               Open3.popen3("ruby rubima-lint.rb") { |stdin, stdout, stderr|
+                  stdin.puts "笑)"
+                  stdin.close
+                  stdout.read.must_equal ""
+               }
+            end
+         end
+      end
 
       describe "三点リーダ" do
          describe "単独で使っている時" do
