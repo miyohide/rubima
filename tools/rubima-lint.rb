@@ -44,6 +44,23 @@ union = [
 ]
 不要な空白 = Regexp.union(*union)
 
+class RubimaLint
+   def initialize
+      @warning_count = 0
+      @foot_note = false
+      @toc_check = false
+      STDOUT.set_encoding(Encoding.local_charmp)
+   end
+
+   def white_space_check(line)
+      line.gsub(空白抜け) do
+         @warning_count += 1
+         "\e[7m \e[m"
+      end
+   end
+end
+
+
 count = 0
 fn = false
 last_hrule = false
