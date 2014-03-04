@@ -133,11 +133,11 @@ if $0 == __FILE__
 
       puts "#{ARGF.lineno}:#{line}" if org_line != line
 
-      footnote_check(line)
-      last_hrule_check(line)
+      checker.footnote_check(line)
+      checker.last_hrule_check(line)
    end
 
-   footnote_pair_check
+   checker.footnote_pair_check
 
    if checker.warning_count > 0
       puts "#{checker.warning_count} warning(s)"
