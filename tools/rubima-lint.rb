@@ -79,12 +79,12 @@ class RubimaLint
          m = $~
          case m[:link]
          when %r!\Ahttps?://!
-            $&
+            m[0]
          when /[^0-9A-Za-z\-_]/
             @warning_count += 1
             "#{m[:left]}\e[34m#{m[:link]}\e[m#{m[:right]}"
          else
-            $&
+            m[0]
          end
       end
    end
