@@ -3,14 +3,21 @@ require 'minitest/autorun'
 require File.expand_path('../../rubima-lint', __FILE__)
 
 describe RubimaLint do
-   describe "[[名前|https://foo.bar]]形式のとき" do
-      before do
-         @line = "[[名前|https://foo.bar]]"
-      end
-      it "引数と戻り値が一緒であること" do
-         RubimaLint.new.link_check(@line).must_equal @line
-      end
-   end
 
+   describe "TODO" do
+      before do
+         @line = "TODO これをやる"
+      end
+
+      it { RubimaLint.new.todo_check(1, @line).must_equal "" }
+   end
+   
+   describe "TODO2" do
+      before do
+         @line = "これをやる"
+      end
+
+      it { RubimaLint.new.todo_check(1, @line).must_equal "" }
+   end
 end
 

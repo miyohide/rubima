@@ -38,69 +38,65 @@ class RubimaLint
    ]
    Const不要な空白 = Regexp.union(*union)
 
-   attr_reader :warning_count
+   attr_reader :warning_count, :error_messages
 
    def initialize
       @warning_count = 0
+      @error_messages = []
       @fn = false
       @last_hrule = false
    end
 
-   def white_space_check(line)
+   def white_space_check(lineno, line)
       line.gsub(Const空白抜け) do
          @warning_count += 1
-         "\e[7m \e[m"
+         @error_messages << "#{lineno}:\e[7m \e[m"
       end
    end
 
-   def invalid_pattern_check(line)
+   def invalid_pattern_check(lineno, line)
       line.gsub(Constinvalid_pattern) do
          @warning_count += 1
-         "\e[31m#{$&}\e[m"
+         @error_messages << "#{lineno}:\e[31m#{$&}\e[m"
       end
    end
 
-   def unnecessary_space_check(line)
+   def unnecessary_space_check(lineno, line)
       line.gsub(Const不要な空白) do
          @warning_count += 1
-         "\e[32m#{$&}\e[m"
+         @error_messages << "#{lineno}:\e[32m#{$&}\e[m"
       end
    end
 
-   def todo_check(line)
+   def todo_check(lineno, line)
       line.gsub(/TODO/) do
          @warning_count += 1
-         "\e[33m#{$&}\e[m"
+         @error_messages << "#{lineno}:\e[33m#{$&}\e[m"
       end
    end
 
-   def link_check(line)
+   def link_check(lineno, line)
       line.gsub(/(?<left>\[\[(.*?\|)?)(?<link>.*)(?<right>\]\])/) do
          m = $~
-         case m[:link]
-         when %r!\Ahttps?://!
-            m[0]
-         when /[^0-9A-Za-z\-_]/
+         if m[:link] !~ %r!\Ahttps?://! &&  m[:link] =~ /[^0-9A-Za-z\-_]/
             @warning_count += 1
-            "#{m[:left]}\e[34m#{m[:link]}\e[m#{m[:right]}"
-         else
-            m[0]
+            @error_messages << "#{lineno}:#{m[:left]}\e[34m#{m[:link]}\e[m#{m[:right]}"
          end
       end
    end
 
-   def toc_check(line)
+   def toc_check(lineno, line)
       line.gsub(/\{\{toc\}\}/) do
          @warning_count += 1
-         "\e[35m#{$&}\e[m"
+         @error_messages << "#{lineno}:\e[35m#{$&}\e[m"
       end
    end
 
-   def footnote_check(line)
+   def footnote_check(lineno, line)
       @fn = true if /\{\{fn/ =~ line
    end
 
-   def last_hrule_check(line)
+   def last_hrule_check(lineno, line)
       if /^----$/ =~ line
          @last_hrule = true
       elsif /\S/ =~ line
@@ -117,27 +113,27 @@ class RubimaLint
          puts "\e[7m脚注がないのに末尾に「----」がある。\e[m"
       end
    end
+
 end
 
 if $0 == __FILE__
    checker = RubimaLint.new
    ARGF.each do |line|
 
-      org_line = line
-      line = checker.white_space_check(line)
-      line = checker.invalid_pattern_check(line)
-      line = checker.unnecessary_space_check(line)
-      line = checker.todo_check(line)
-      line = checker.link_check(line)
-      line = checker.toc_check(line)
+      checker.white_space_check(ARGF.lineno, line)
+      checker.invalid_pattern_check(ARGF.lineno, line)
+      checker.unnecessary_space_check(ARGF.lineno, line)
+      checker.todo_check(ARGF.lineno, line)
+      checker.link_check(ARGF.lineno, line)
+      checker.toc_check(ARGF.lineno, line)
 
-      puts "#{ARGF.lineno}:#{line}" if org_line != line
-
-      checker.footnote_check(line)
-      checker.last_hrule_check(line)
+      checker.footnote_check(ARGF.lineno, line)
+      checker.last_hrule_check(ARGF.lineno, line)
    end
 
    checker.footnote_pair_check
+
+   puts checker.error_messages
 
    if checker.warning_count > 0
       puts "#{checker.warning_count} warning(s)"
