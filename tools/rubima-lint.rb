@@ -47,49 +47,71 @@ class RubimaLint
       @last_hrule = false
    end
 
+   def add_msg(msg)
+      @error_messages << msg
+      msg
+   end
+
    def white_space_check(lineno, line)
-      line.gsub(Const空白抜け) do
+      check_result = false
+      line.gsub!(Const空白抜け) do
+         check_result = true
          @warning_count += 1
-         @error_messages << "#{lineno}:\e[7m \e[m"
+         "\e[7m \e[m"
       end
+      add_msg("#{lineno} : #{line}") if check_result
    end
 
    def invalid_pattern_check(lineno, line)
-      line.gsub(Constinvalid_pattern) do
+      check_result = false
+      line.gsub!(Constinvalid_pattern) do
+         check_result = true
          @warning_count += 1
-         @error_messages << "#{lineno}:\e[31m#{$&}\e[m"
+         "\e[31m#{$&}\e[m"
       end
+      add_msg("#{lineno} : #{line}") if check_result
    end
 
    def unnecessary_space_check(lineno, line)
-      line.gsub(Const不要な空白) do
+      check_result = false
+      line.gsub!(Const不要な空白) do
+         check_result = true
          @warning_count += 1
-         @error_messages << "#{lineno}:\e[32m#{$&}\e[m"
+         "\e[32m#{$&}\e[m"
       end
+      add_msg("#{lineno} : #{line}") if check_result
    end
 
    def todo_check(lineno, line)
-      line.gsub(/TODO/) do
+      check_result = false
+      line.gsub!(/TODO/) do
+         check_result = true
          @warning_count += 1
-         @error_messages << "#{lineno}:\e[33m#{$&}\e[m"
+         "\e[33m#{$&}\e[m"
       end
+      add_msg("#{lineno} : #{line}") if check_result
    end
 
    def link_check(lineno, line)
-      line.gsub(/(?<left>\[\[(.*?\|)?)(?<link>.*)(?<right>\]\])/) do
+      check_result = false
+      line.gsub!(/(?<left>\[\[(.*?\|)?)(?<link>.*)(?<right>\]\])/) do
          m = $~
          if m[:link] !~ %r!\Ahttps?://! &&  m[:link] =~ /[^0-9A-Za-z\-_]/
+            check_result = true
             @warning_count += 1
-            @error_messages << "#{lineno}:#{m[:left]}\e[34m#{m[:link]}\e[m#{m[:right]}"
+            "#{m[:left]}\e[34m#{m[:link]}\e[m#{m[:right]}"
          end
       end
+      add_msg("#{lineno} : #{line}") if check_result
    end
 
    def toc_check(lineno, line)
-      line.gsub(/\{\{toc\}\}/) do
+      check_result = false
+      line.gsub!(/\{\{toc\}\}/) do
          @warning_count += 1
-         @error_messages << "#{lineno}:\e[35m#{$&}\e[m"
+         "\e[35m#{$&}\e[m"
       end
+      add_msg("#{lineno} : #{line}") if check_result
    end
 
    def footnote_check(lineno, line)
@@ -133,7 +155,9 @@ if $0 == __FILE__
 
    checker.footnote_pair_check
 
-   puts checker.error_messages
+   checker.error_messages.each do |error_message|
+      puts error_message
+   end
 
    if checker.warning_count > 0
       puts "#{checker.warning_count} warning(s)"
