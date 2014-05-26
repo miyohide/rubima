@@ -1,42 +1,43 @@
 class RubimaLint
-   Const非ascii = '[^[:ascii:]]'
-   Constascii = '[\w&&[:ascii:]]'
-   Const開き丸括弧 = '[(]'
-   Const閉じ丸括弧 = '[)]'
-   Const疑問符・感嘆符 = '[？！]'
-   Const句読点 = "[、。#{Const疑問符・感嘆符}]"
-   Const開き括弧類 = '[「『]'
-   Const閉じ括弧類 = '[』」]'
-   Const三点リーダ = '[…]'
-   Constその他ok文字 = "[#{Const三点リーダ}〜：　]"
-   Constasciiの直前ok文字 = "[#{Const句読点}#{Const開き括弧類}#{Constその他ok文字}]"
-   Constasciiの直後ok文字 = "[#{Const句読点}#{Const閉じ括弧類}#{Constその他ok文字}]"
-   Const発言頭 = "'''　"
-   Const非asciiの直後にascii = /(?<=#{Const非ascii})(?=#{Constascii})(?<!#{Constasciiの直前ok文字})(?<!#{Const発言頭})/o
-   Constasciiの直後に非ascii = /(?<=#{Constascii})(?=#{Const非ascii})(?!#{Constasciiの直後ok文字})/o
-   Const空白抜け = /#{Const非asciiの直後にascii}|#{Constasciiの直後に非ascii}/o
+   NOT_ASCII  = '[^[:ascii:]]'     # 非ASCII
+   ASCII_CHAR = '[\w&&[:ascii:]]'  # ASCII
+   OPEN_PARENTHESES  = '[(]'  # 開き丸括弧
+   CLOSE_PARENTHESES = '[)]'  # 閉じ丸括弧
+   QUESTION_EXCLAMATION = '[？！]'  # 疑問符・感嘆符
+   PUNCTUATION = "[、。#{QUESTION_EXCLAMATION}]"  # 句読点
+   OPEN_BRANCKETS  = '[「『]'  # 開き括弧類
+   CLOSE_BRANCKETS = '[』」]'  # 閉じ括弧類
+   THREE_POINT_LEADER = '[…]'  # 三点リーダ
+   OTHER_OK_LETTER = "[#{THREE_POINT_LEADER}〜：　]"  # その他OK文字
+   OK_BEFORE_ASCII = "[#{PUNCTUATION}#{OPEN_BRANCKETS}#{OTHER_OK_LETTER}]"  # ASCII直前のOK文字
+   OK_AFTER_ASCII = "[#{PUNCTUATION}#{CLOSE_BRANCKETS}#{OTHER_OK_LETTER}]"  # ASCII直後のOK文字
+   HEAD_CHAR = "'''　"  # 発言頭
+   ASCII_AFTER_NOT_ASCII = /(?<=#{NOT_ASCII})(?=#{ASCII_CHAR})(?<!#{OK_BEFORE_ASCII})(?<!#{HEAD_CHAR})/o  # 非ASCIIの直後にASCII
+   NOT_ASCII_AFTER_ASCII = /(?<=#{ASCII_CHAR})(?=#{NOT_ASCII})(?!#{OK_AFTER_ASCII})/o  # ASCIIの直後に非ASCII
+   MISSING_BLANK = /#{ASCII_AFTER_NOT_ASCII}|#{NOT_ASCII_AFTER_ASCII}/o  # 空白抜け
 
-   Const丸括弧前後ok文字 = "[ [[:ascii:]&&[:graph:]]#{Const句読点}#{Const開き括弧類}#{Const閉じ括弧類}#{Const三点リーダ}]"
+   # 円括弧前後OK文字
+   OK_AROUND_PARENTHESES = "[ [[:ascii:]&&[:graph:]]#{PUNCTUATION}#{OPEN_BRANCKETS}#{CLOSE_BRANCKETS}#{THREE_POINT_LEADER}]"
 
    union = [
-      /(?<!^)(?<!#{Const発言頭})(?<!#{Const丸括弧前後ok文字})#{Const開き丸括弧}/o,
-      /#{Const閉じ丸括弧}(?!#{Const丸括弧前後ok文字})(?!$)/o,
-      Const文末で括弧を閉じる場合 = /。#{Const閉じ丸括弧}。/o,
-         Const括弧笑の後の句点 = /笑#{Const閉じ丸括弧}。$/o,
-         Const単独の三点リーダ = /(?<!#{Const三点リーダ})#{Const三点リーダ}(?!#{Const三点リーダ})/o,
-         Const文末の三点リーダ = /#{Const三点リーダ}$/o,
-      Const段落中の疑問符・感嘆符 = /#{Const疑問符・感嘆符}(?!$)(?![　#{Const疑問符・感嘆符}#{Const閉じ括弧類}])/o,
-      Const全角括弧 = /[（）]/o,
+      /(?<!^)(?<!#{HEAD_CHAR})(?<!#{OK_AROUND_PARENTHESES})#{OPEN_PARENTHESES}/o,
+      /#{CLOSE_PARENTHESES}(?!#{OK_AROUND_PARENTHESES})(?!$)/o,
+      PARENTHESES_AT_END_OF_STATE = /。#{CLOSE_PARENTHESES}。/o,  # 文末で括弧を閉じる場合
+         LAUGH_AND_PARENTHESES = /笑#{CLOSE_PARENTHESES}。$/o,    # 括弧笑の後の句点
+         SINGLE_THREE_POINT_LEADER = /(?<!#{THREE_POINT_LEADER})#{THREE_POINT_LEADER}(?!#{THREE_POINT_LEADER})/o,  # 単独の三点リーダ
+         THREE_POINT_LEADER_AT_END = /#{THREE_POINT_LEADER}$/o,  # 文末の三点リーダ
+      QUESTION_EXCLAMATION_IN_PARAGRAPH = /#{QUESTION_EXCLAMATION}(?!$)(?![　#{QUESTION_EXCLAMATION}#{CLOSE_BRANCKETS}])/o,  # 段落中の疑問符・感嘆符
+      FULL_WIDTH_PARENTHESES = /[（）]/o,  # 全角括弧
    ]
-   Constinvalid_pattern = Regexp.union(*union)
+   INVALID_PATTERN = Regexp.union(*union)
 
-   Const括弧の前後にあると空白を入れない文字 = "[#{Const句読点}#{Const開き括弧類}#{Const閉じ括弧類}]"
+   CHAR_AROUND_NOT_PERMIT_BLANK = "[#{PUNCTUATION}#{OPEN_BRANCKETS}#{CLOSE_BRANCKETS}]"
    union = [
-      /#{Const三点リーダ} #{Const開き丸括弧}/o,
-      /#{Const括弧の前後にあると空白を入れない文字} #{Const開き丸括弧}/o,
-      /#{Const閉じ丸括弧} #{Const括弧の前後にあると空白を入れない文字}/o,
+      /#{THREE_POINT_LEADER} #{OPEN_PARENTHESES}/o,
+      /#{CHAR_AROUND_NOT_PERMIT_BLANK} #{OPEN_PARENTHESES}/o,
+      /#{CLOSE_PARENTHESES} #{CHAR_AROUND_NOT_PERMIT_BLANK}/o,
    ]
-   Const不要な空白 = Regexp.union(*union)
+   INVALID_BLANK = Regexp.union(*union)
 
    attr_reader :warning_count, :error_messages
 
@@ -54,7 +55,7 @@ class RubimaLint
 
    def white_space_check(lineno, line)
       check_result = false
-      line.gsub!(Const空白抜け) do
+      line.gsub!(MISSING_BLANK) do
          check_result = true
          @warning_count += 1
          "\e[7m \e[m"
@@ -64,7 +65,7 @@ class RubimaLint
 
    def invalid_pattern_check(lineno, line)
       check_result = false
-      line.gsub!(Constinvalid_pattern) do
+      line.gsub!(INVALID_PATTERN) do
          check_result = true
          @warning_count += 1
          "\e[31m#{$&}\e[m"
@@ -74,7 +75,7 @@ class RubimaLint
 
    def unnecessary_space_check(lineno, line)
       check_result = false
-      line.gsub!(Const不要な空白) do
+      line.gsub!(INVALID_BLANK) do
          check_result = true
          @warning_count += 1
          "\e[32m#{$&}\e[m"
