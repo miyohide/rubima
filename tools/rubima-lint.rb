@@ -41,15 +41,46 @@ class RubimaLint
 
    attr_reader :warning_count, :error_messages
 
-   def initialize
+   def initialize(options)
       @warning_count = 0
-      @error_messages = []
+      @warning_messages = []
+      @options = options
       @fn = false
       @last_hrule = false
    end
 
+   def run!
+      @options.each_line do |line|
+         white_space_check(@options.lineno, line)
+         invalid_pattern_check(@options.lineno, line)
+         unnecessary_space_check(@options.lineno, line)
+         todo_check(@options.lineno, line)
+         link_check(@options.lineno, line)
+         toc_check(@options.lineno, line)
+
+         footnote_check(@options.lineno, line)
+         last_hrule_check(@options.lineno, line)
+      end
+
+      footnote_pair_check
+
+      @warning_count > 0
+   end
+
+   def print_result
+      if @warning_count > 0
+         puts "#{@warning_count} warning(s)"
+         @warning_messages.each do |warning_message|
+            puts warning_message
+         end
+         false
+      else
+         true
+      end
+   end
+
    def add_msg(msg)
-      @error_messages << msg
+      @warning_messages << msg
       msg
    end
 
@@ -109,6 +140,7 @@ class RubimaLint
    def toc_check(lineno, line)
       check_result = false
       line.gsub!(/\{\{toc\}\}/) do
+         check_result = true
          @warning_count += 1
          "\e[35m#{$&}\e[m"
       end
@@ -130,39 +162,21 @@ class RubimaLint
    def footnote_pair_check
       if @fn && !@last_hrule
          @warning_count += 1
-         puts "\e[7m脚注があるのに末尾に「----」がない。\e[m"
+         add_msg("\e[7m脚注があるのに末尾に「----」がない。\e[m")
       elsif !@fn && @last_hrule
          @warning_count += 1
-         puts "\e[7m脚注がないのに末尾に「----」がある。\e[m"
+         add_msg("\e[7m脚注がないのに末尾に「----」がある。\e[m")
       end
    end
 
 end
 
 if $0 == __FILE__
-   checker = RubimaLint.new
-   ARGF.each do |line|
+   checker = RubimaLint.new(ARGF)
+   checker.run!
 
-      checker.white_space_check(ARGF.lineno, line)
-      checker.invalid_pattern_check(ARGF.lineno, line)
-      checker.unnecessary_space_check(ARGF.lineno, line)
-      checker.todo_check(ARGF.lineno, line)
-      checker.link_check(ARGF.lineno, line)
-      checker.toc_check(ARGF.lineno, line)
+   checker.print_result
 
-      checker.footnote_check(ARGF.lineno, line)
-      checker.last_hrule_check(ARGF.lineno, line)
-   end
-
-   checker.footnote_pair_check
-
-   checker.error_messages.each do |error_message|
-      puts error_message
-   end
-
-   if checker.warning_count > 0
-      puts "#{checker.warning_count} warning(s)"
-      exit(false)
-   end
+   exit(print_result)
 end
 
