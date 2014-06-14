@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 class RubimaLint
    NOT_ASCII  = '[^[:ascii:]]'     # 非ASCII
    ASCII_CHAR = '[\w&&[:ascii:]]'  # ASCII
@@ -91,7 +93,7 @@ class RubimaLint
          @warning_count += 1
          "\e[7m \e[m"
       end
-      add_msg("#{lineno} : #{line}") if check_result
+      add_msg("半角英数字の前後には空白が必要です。: #{lineno}行目 : #{line}") if check_result
    end
 
    def invalid_pattern_check(lineno, line)
@@ -101,7 +103,7 @@ class RubimaLint
          @warning_count += 1
          "\e[31m#{$&}\e[m"
       end
-      add_msg("#{lineno} : #{line}") if check_result
+      add_msg("句点や括弧の記述が編集指針にあいません。 : #{lineno}行目 : #{line}") if check_result
    end
 
    def unnecessary_space_check(lineno, line)
@@ -111,7 +113,7 @@ class RubimaLint
          @warning_count += 1
          "\e[32m#{$&}\e[m"
       end
-      add_msg("#{lineno} : #{line}") if check_result
+      add_msg("不要な空白が含まれています。 : #{lineno}行目 : #{line}") if check_result
    end
 
    def todo_check(lineno, line)
@@ -121,7 +123,7 @@ class RubimaLint
          @warning_count += 1
          "\e[33m#{$&}\e[m"
       end
-      add_msg("#{lineno} : #{line}") if check_result
+      add_msg("TODOが含まれています。 : #{lineno}行目 : #{line}") if check_result
    end
 
    def link_check(lineno, line)
@@ -134,7 +136,7 @@ class RubimaLint
             "#{m[:left]}\e[34m#{m[:link]}\e[m#{m[:right]}"
          end
       end
-      add_msg("#{lineno} : #{line}") if check_result
+      add_msg("リンクの設定漏れと思われる部分があります。 : #{lineno}行目 : #{line}") if check_result
    end
 
    def toc_check(lineno, line)
@@ -144,7 +146,7 @@ class RubimaLint
          @warning_count += 1
          "\e[35m#{$&}\e[m"
       end
-      add_msg("#{lineno} : #{line}") if check_result
+      add_msg("{{toc}}ではなく、{{toc_here}}を使ってください。 : #{lineno}行目 : #{line}") if check_result
    end
 
    def footnote_check(lineno, line)
@@ -162,10 +164,10 @@ class RubimaLint
    def footnote_pair_check
       if @fn && !@last_hrule
          @warning_count += 1
-         add_msg("\e[7m脚注があるのに末尾に「----」がない。\e[m")
+         add_msg("\e[7m脚注があるのに末尾に「----」がありません。\e[m")
       elsif !@fn && @last_hrule
          @warning_count += 1
-         add_msg("\e[7m脚注がないのに末尾に「----」がある。\e[m")
+         add_msg("\e[7m脚注がないのに末尾に「----」があります。\e[m")
       end
    end
 
@@ -175,8 +177,6 @@ if $0 == __FILE__
    checker = RubimaLint.new(ARGF)
    checker.run!
 
-   checker.print_result
-
-   exit(print_result)
+   exit(checker.print_result)
 end
 
